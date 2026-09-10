@@ -720,6 +720,7 @@ export const ShellTool = Tool.define(
           ...(cut && file ? { outputPath: file } : {}),
         },
         output,
+        outputTruncationHandled: true as const,
       }
     })
 

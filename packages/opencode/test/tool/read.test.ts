@@ -1,5 +1,6 @@
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { afterEach, describe, expect } from "bun:test"
+import { ConfigV1 } from "@opencode-ai/core/v1/config/config"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { Cause, Effect, Exit, Layer, Stream } from "effect"
 import path from "path"
@@ -26,6 +27,7 @@ import {
   tmpdirScoped,
 } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
+import { TestConfig } from "../fixture/config"
 
 const FIXTURES_DIR = path.join(import.meta.dir, "fixtures")
 
@@ -58,6 +60,33 @@ const readLayer = (flags: Partial<RuntimeFlags.Info> = {}) =>
   )
 
 const it = testEffect(Layer.mergeAll(readLayer(), testInstanceStoreLayer))
+
+const configuredReadLayer = (cfg: ConfigV1.Info) =>
+  Layer.mergeAll(
+    LayerNode.compile(
+      LayerNode.group([
+        Agent.node,
+        FSUtil.node,
+        CrossSpawnSpawner.node,
+        Instruction.node,
+        LSP.node,
+        Ripgrep.node,
+        Truncate.node,
+        Config.node,
+      ]),
+      [[Config.node, TestConfig.layer({ get: () => Effect.succeed(cfg) })]],
+    ),
+    testInstanceStoreLayer,
+  )
+
+const boundedReadIt = testEffect(
+  configuredReadLayer({
+    tool_output: {
+      max_lines: 200,
+      max_bytes: 4096,
+    },
+  }),
+)
 
 const init = Effect.fn("ReadToolTest.init")(function* () {
   const info = yield* ReadTool
@@ -315,6 +344,41 @@ describe("tool.read env file permissions", () => {
 })
 
 describe("tool.read truncation", () => {
+  boundedReadIt.instance("applies configured output bound while preserving usable Read continuation", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const filepath = path.join(test.directory, "bounded-read.txt")
+      const content = `${"x".repeat(80)}\n`.repeat(50_000)
+      yield* put(filepath, content)
+
+      const first = yield* run({ filePath: filepath })
+
+      expect(first.metadata.truncated).toBe(true)
+      expect(first.output).toContain("The tool call succeeded but the output was truncated")
+      expect(first.output).toContain("Output capped at")
+      expect(first.output).toContain("Use offset=")
+
+      const metadata = first.metadata as typeof first.metadata & {
+        outputPath?: string
+      }
+      expect(metadata.outputPath).toBeDefined()
+
+      // max_bytes controls the retained preview; generic notices and the
+      // preserved semantic continuation are appended afterward.
+      expect(Buffer.byteLength(first.output, "utf-8")).toBeLessThan(8 * 1024)
+
+      const match = first.output.match(/Use offset=(\d+) to continue\./)
+      expect(match).not.toBeNull()
+      const offset = Number(match![1])
+      expect(offset).toBeGreaterThan(1)
+
+      const second = yield* run({ filePath: filepath, offset })
+
+      expect(second.output).toContain(`<path>${filepath}</path>`)
+      expect(second.output).toContain(`${offset}: `)
+    }),
+  )
+
   it.instance("truncates large file by bytes and sets truncated metadata", () =>
     Effect.gen(function* () {
       const test = yield* TestInstance
