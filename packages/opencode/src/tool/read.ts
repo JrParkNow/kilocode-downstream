@@ -356,10 +356,13 @@ export const ReadTool = Tool.define<
           const last = file.offset + file.raw.length - 1
           const next = last + 1
           const truncated = file.more || file.cut
-          if (file.cut) {
-            output += `\n\n(Output capped at ${MAX_BYTES_LABEL}. Showing lines ${file.offset}-${last}. Use offset=${next} to continue.)`
-          } else if (file.more) {
-            output += `\n\n(Showing lines ${file.offset}-${last} of ${file.count}. Use offset=${next} to continue.)`
+          const continuation = file.cut
+            ? `(Output capped at ${MAX_BYTES_LABEL}. Showing lines ${file.offset}-${last}. Use offset=${next} to continue.)`
+            : file.more
+              ? `(Showing lines ${file.offset}-${last} of ${file.count}. Use offset=${next} to continue.)`
+              : undefined
+          if (continuation) {
+            output += `\n\n${continuation}`
           } else {
             output += `\n\n(End of file - total ${file.count} lines)`
           }
@@ -385,6 +388,7 @@ export const ReadTool = Tool.define<
                 truncated,
               },
             },
+            ...(continuation && { outputTruncationSuffix: continuation }),
           }
         }),
       )

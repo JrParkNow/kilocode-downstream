@@ -22,6 +22,11 @@ export interface Options {
   maxLines?: number
   maxBytes?: number
   direction?: "head" | "tail"
+  /**
+   * Semantic recovery guidance that must remain visible when generic
+   * truncation occurs, such as a tool-specific pagination continuation.
+   */
+  preserveSuffix?: string
 }
 
 function hasTaskTool(agent?: Agent.Info) {
@@ -132,11 +137,12 @@ const layer = Layer.effect(
         ? `The tool call succeeded but the output was truncated. Full output saved to: ${file}\nUse the Task tool to have explore agent process this file with Grep and Read (with offset/limit). Do NOT read the full file yourself - delegate to save context.`
         : `The tool call succeeded but the output was truncated. Full output saved to: ${file}\nUse Grep to search the full content or Read with offset/limit to view specific sections.`
 
+      const content =
+        direction === "head"
+          ? `${preview}\n\n...${removed} ${unit} truncated...\n\n${hint}`
+          : `...${removed} ${unit} truncated...\n\n${hint}\n\n${preview}`
       return {
-        content:
-          direction === "head"
-            ? `${preview}\n\n...${removed} ${unit} truncated...\n\n${hint}`
-            : `...${removed} ${unit} truncated...\n\n${hint}\n\n${preview}`,
+        content: options.preserveSuffix ? `${content}\n\n${options.preserveSuffix}` : content,
         truncated: true,
         outputPath: file,
       } as const

@@ -86,6 +86,22 @@ describe("Truncate", () => {
       }),
     )
 
+    it.live("preserves semantic suffix when truncating", () =>
+      Effect.gen(function* () {
+        const svc = yield* Truncate.Service
+        const content = "a".repeat(1000)
+        const suffix = "(Use offset=42 to continue.)"
+        const result = yield* svc.output(content, {
+          maxBytes: 100,
+          preserveSuffix: suffix,
+        })
+
+        expect(result.truncated).toBe(true)
+        expect(result.content).toContain("bytes truncated...")
+        expect(result.content).toEndWith(suffix)
+      }),
+    )
+
     it.live("truncates from tail when direction is tail", () =>
       Effect.gen(function* () {
         const svc = yield* Truncate.Service

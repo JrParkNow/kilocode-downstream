@@ -6,6 +6,7 @@ import { MessageID, SessionID } from "../../src/session/schema"
 import { Tool } from "@/tool/tool"
 import { Truncate } from "@/tool/truncate"
 import { testEffect } from "../lib/effect"
+import { withTmpdirInstance } from "../fixture/fixture"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([Truncate.node, Agent.node])))
 
@@ -117,7 +118,7 @@ describe("Tool.define", () => {
       yield* execute({ count: "7" }, ctx)
 
       expect(calls).toEqual([{ count: 5 }, { count: 7 }])
-    }),
+    }).pipe(withTmpdirInstance()),
   )
 
   // Regression for #28438: the wrap is the canonical "untyped → typed" boundary.
@@ -213,4 +214,84 @@ describe("Tool.define", () => {
     }),
   )
   // kilocode_change end
+  // PERF-4B: `metadata.truncated` can describe semantic partial-result state
+  // such as Read pagination or Grep match limits. Its presence alone must not
+  // suppress the independent generic model-output safety bound.
+  it.effect("semantic truncated metadata does not bypass generic output safety", () =>
+    Effect.gen(function* () {
+      const output = "x".repeat(Truncate.MAX_BYTES + 128)
+      const info = yield* Tool.define(
+        "semantic-partial",
+        Effect.succeed({
+          description: "test tool",
+          parameters: params,
+          execute() {
+            return Effect.succeed({
+              title: "test",
+              output,
+              metadata: { truncated: true },
+              outputTruncationSuffix: "(Use offset=42 to continue.)",
+            })
+          },
+        }),
+      )
+
+      const tool = yield* info.init()
+      const result = yield* tool.execute(
+        { input: "ok" },
+        {
+          ...makeCtx(),
+          agent: "code",
+        },
+      )
+
+      const metadata = result.metadata as {
+        truncated?: boolean
+        outputPath?: string
+      }
+
+      expect(metadata.truncated).toBe(true)
+      expect(result.output).not.toBe(output)
+      expect(result.output).toContain("The tool call succeeded but the output was truncated")
+      expect(result.output).toEndWith("(Use offset=42 to continue.)")
+      expect(metadata.outputPath).toBeDefined()
+      expect("outputTruncationSuffix" in result).toBe(false)
+    }).pipe(withTmpdirInstance()),
+  )
+
+  it.effect("explicit output truncation ownership bypasses generic truncation without leaking the marker", () =>
+    Effect.gen(function* () {
+      const output = "x".repeat(Truncate.MAX_BYTES + 128)
+      const info = yield* Tool.define(
+        "self-bounded",
+        Effect.succeed({
+          description: "test tool",
+          parameters: params,
+          execute() {
+            return Effect.succeed({
+              title: "test",
+              output,
+              metadata: { truncated: true, outputPath: "/already/bounded" },
+              outputTruncationHandled: true as const,
+            })
+          },
+        }),
+      )
+
+      const tool = yield* info.init()
+      const result = yield* tool.execute(
+        { input: "ok" },
+        {
+          ...makeCtx(),
+          agent: "code",
+        },
+      )
+
+      expect(result.output).toBe(output)
+      expect(result.metadata.truncated).toBe(true)
+      expect(result.metadata.outputPath).toBe("/already/bounded")
+      expect("outputTruncationHandled" in result).toBe(false)
+    }),
+  )
+
 })

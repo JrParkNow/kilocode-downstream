@@ -51,6 +51,17 @@ export interface ExecuteResult<M extends Metadata = Metadata> {
   metadata: M
   output: string
   attachments?: Omit<SessionV1.FilePart, "id" | "sessionID" | "messageID">[]
+  /**
+   * Internal pipeline ownership signal. Set only when the tool has already
+   * applied model-facing output bounds and generic truncation must be skipped.
+   * Tool.wrap consumes this field before returning the result.
+   */
+  outputTruncationHandled?: true
+  /**
+   * Semantic recovery guidance to preserve if generic output truncation fires.
+   * Tool.wrap consumes this field before returning the result.
+   */
+  outputTruncationSuffix?: string
 }
 
 export interface Def<
@@ -131,17 +142,22 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
           )
           // kilocode_change end
           const result = yield* execute(decoded as Schema.Schema.Type<Parameters>, ctx)
-          if (result.metadata.truncated !== undefined) {
-            return result
+          const { outputTruncationHandled, outputTruncationSuffix, ...base } = result
+          if (outputTruncationHandled === true) {
+            return base
           }
           const agent = yield* agents.get(ctx.agent)
-          const truncated = yield* truncate.output(result.output, {}, agent)
+          const truncated = yield* truncate.output(
+            result.output,
+            { preserveSuffix: outputTruncationSuffix },
+            agent,
+          )
           return {
-            ...result,
+            ...base,
             output: truncated.content,
             metadata: {
               ...result.metadata,
-              truncated: truncated.truncated,
+              truncated: result.metadata.truncated === true || truncated.truncated,
               ...(truncated.truncated && { outputPath: truncated.outputPath }),
             },
           }
