@@ -11,12 +11,12 @@ export function registerTerminalActions(
 ): void {
   const target = () => (agentManager?.isActive() ? agentManager : provider)
   const reveal = async () => {
-    await vscode.commands.executeCommand("kilo-code.SidebarProvider.focus")
+    await vscode.commands.executeCommand("hybrid-ai-runtime-kilo-code-SidebarProvider.focus")
     await provider.waitForReady()
   }
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.terminalAddToContext", async (args: any) => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.terminalAddToContext", async (args: any) => {
       let content = args?.selection as string | undefined
       if (!content) {
         content = (await getTerminalContents(-1)).content
@@ -37,7 +37,7 @@ export function registerTerminalActions(
       view.postMessage({ type: "action", action: "focusInput" })
     }),
 
-    vscode.commands.registerCommand("kilo-code.new.terminalFixCommand", async (args: any) => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.terminalFixCommand", async (args: any) => {
       let content = args?.selection as string | undefined
       if (!content) {
         content = (await getTerminalContents(1)).content
@@ -57,7 +57,7 @@ export function registerTerminalActions(
       view.postMessage({ type: "triggerTask", text: prompt })
     }),
 
-    vscode.commands.registerCommand("kilo-code.new.terminalExplainCommand", async (args: any) => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.terminalExplainCommand", async (args: any) => {
       let content = args?.selection as string | undefined
       if (!content) {
         content = (await getTerminalContents(1)).content

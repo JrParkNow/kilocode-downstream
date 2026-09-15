@@ -34,17 +34,17 @@ export function formatKeybinding(raw: string, mac: boolean): string {
 }
 
 /** Agent Manager command prefix for keybinding extraction. */
-const AM_PREFIX = "kilo-code.new.agentManager."
+const AM_PREFIX = "hybrid-ai-runtime.kilo-code.agentManager."
 
 /** Global commands whose keybindings are forwarded to the webview. */
 const GLOBAL_KEYBINDINGS: Record<string, string> = {
-  "kilo-code.new.agentManagerOpen": "agentManagerOpen",
-  "kilo-code.new.cycleAgentMode": "cycleAgentMode",
-  "kilo-code.new.cyclePreviousAgentMode": "cyclePreviousAgentMode",
+  "hybrid-ai-runtime.kilo-code.agentManagerOpen": "agentManagerOpen",
+  "hybrid-ai-runtime.kilo-code.cycleAgentMode": "cycleAgentMode",
+  "hybrid-ai-runtime.kilo-code.cyclePreviousAgentMode": "cyclePreviousAgentMode",
 }
 
 function addBinding(bindings: Record<string, string>, name: string, value: string, when?: string): void {
-  if (name === "newTerminalTab" && when?.includes("!kilo-code.new.agentManagerSideTerminalFocused")) {
+  if (name === "newTerminalTab" && when?.includes("!hybrid-ai-runtime.kilo-code.agentManagerSideTerminalFocused")) {
     bindings.newTerminalCenter = value
     return
   }

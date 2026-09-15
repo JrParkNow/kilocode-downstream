@@ -56,7 +56,7 @@ const MESSAGES_PAGE = 50
 const CONVERSATIONS_PAGE = 50
 
 export class KiloClawProvider implements vscode.Disposable {
-  static readonly viewType = "kilo-code.new.KiloClawPanel"
+  static readonly viewType = "hybrid-ai-runtime.kilo-code.KiloClawPanel"
 
   private panel: vscode.WebviewPanel | null = null
   private timer: ReturnType<typeof setInterval> | null = null
@@ -241,7 +241,7 @@ export class KiloClawProvider implements vscode.Disposable {
   }
 
   private get locale(): string {
-    const override = vscode.workspace.getConfiguration("kilo-code.new").get<string>("language")
+    const override = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code").get<string>("language")
     return override || vscode.env.language
   }
 

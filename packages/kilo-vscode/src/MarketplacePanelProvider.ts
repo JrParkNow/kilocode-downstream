@@ -17,6 +17,7 @@ import {
 import type { InstallMarketplaceItemOptions, MarketplaceItem } from "./services/marketplace/types"
 import { TelemetryProxy } from "./services/telemetry"
 import { TelemetryEventName } from "./services/telemetry/types"
+import { EXTENSION_ID } from "./identity"
 
 interface MarketplaceMessage {
   type?: string
@@ -28,7 +29,7 @@ interface MarketplaceMessage {
 }
 
 export class MarketplacePanelProvider implements vscode.Disposable {
-  public static readonly viewType = "kilo-code.new.marketplacePanel"
+  public static readonly viewType = "hybrid-ai-runtime.kilo-code.marketplacePanel"
 
   private panel: vscode.WebviewPanel | undefined
   private project: string | null = null
@@ -41,7 +42,7 @@ export class MarketplacePanelProvider implements vscode.Disposable {
   private subscriptions: Array<() => void> = []
   private readonly marketplace = new MarketplaceService()
   private readonly extensionVersion =
-    vscode.extensions.getExtension("kilocode.kilo-code")?.packageJSON?.version ?? "unknown"
+    vscode.extensions.getExtension(EXTENSION_ID)?.packageJSON?.version ?? "unknown"
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -179,7 +180,7 @@ export class MarketplacePanelProvider implements vscode.Disposable {
     if (!this.ready) return
     const info = this.connection.getServerInfo()
     if (info) {
-      const cfg = vscode.workspace.getConfiguration("kilo-code.new")
+      const cfg = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code")
       this.post({
         type: "ready",
         serverInfo: info,

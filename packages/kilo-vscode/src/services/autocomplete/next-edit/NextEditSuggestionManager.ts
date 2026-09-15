@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 import { nesLog } from "./log"
 import { planInsertion, planReplacement } from "./pendingEdit"
 
-const PENDING_CONTEXT_KEY = "kilo-code.nextEdit.hasPendingSuggestion"
+const PENDING_CONTEXT_KEY = "hybrid-ai-runtime.kilo-code.nextEdit.hasPendingSuggestion"
 const CHAIN_DELAY_MS = 60
 
 export type PendingNextEdit =

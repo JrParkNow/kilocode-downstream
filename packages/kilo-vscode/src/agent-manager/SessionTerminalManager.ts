@@ -61,7 +61,7 @@ export class SessionTerminalManager {
       host.onActiveTerminalChanged((terminal) => {
         const managed = terminal ? this.isManaged(terminal) : false
         if (terminal) this.panelOpen = true
-        void host.setContext("kilo-code.agentTerminalFocus", managed)
+        void host.setContext("hybrid-ai-runtime.kilo-code.agentTerminalFocus", managed)
       }),
     )
 
@@ -238,7 +238,7 @@ export class SessionTerminalManager {
   }
 
   dispose(): void {
-    void this.host.setContext("kilo-code.agentTerminalFocus", false)
+    void this.host.setContext("hybrid-ai-runtime.kilo-code.agentTerminalFocus", false)
     for (const entry of this.terminals.values()) entry.terminal.dispose()
     this.terminals.clear()
     for (const d of this.commandDisposables.values()) d.dispose()
@@ -299,7 +299,7 @@ export class SessionTerminalManager {
     const active = this.host.activeTerminal()
     const managed = active ? this.isManaged(active) : false
     if (active) this.panelOpen = true
-    void this.host.setContext("kilo-code.agentTerminalFocus", managed)
+    void this.host.setContext("hybrid-ai-runtime.kilo-code.agentTerminalFocus", managed)
   }
 
   private showOrCreate(key: string, cwd: string, name: string): void {

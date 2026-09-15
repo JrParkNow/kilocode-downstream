@@ -22,7 +22,7 @@ export interface AutoApproveController {
   onChange(listener: (active: boolean) => void): { dispose(): void }
 }
 
-const CONFIG = "kilo-code.new.autoApprove"
+const CONFIG = "hybrid-ai-runtime.kilo-code.autoApprove"
 const KEY = "enabled"
 
 /**
@@ -117,7 +117,7 @@ export function registerToggleAutoApprove(
     }),
   )
 
-  context.subscriptions.push(vscode.commands.registerCommand("kilo-code.new.toggleAutoApprove", toggle))
+  context.subscriptions.push(vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.toggleAutoApprove", toggle))
 
   return {
     active: () => active,

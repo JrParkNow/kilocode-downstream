@@ -19,6 +19,7 @@ import { TelemetryProxy, type TelemetryEventName } from "../services/telemetry"
 import type { AutoApproveController } from "../commands/toggle-auto-approve"
 import type { RemoteStatusService } from "../services/RemoteStatusService"
 import type { CaffeinationService } from "../services/caffeination"
+import { EXTENSION_ID } from "../identity"
 
 const INTRO_KEY = "kilo.agentManager.introDismissed"
 const PR_MERGE_METHODS_KEY = "agentManager.prMergeMethod"
@@ -55,7 +56,7 @@ export class VscodeHost implements Host {
     worktreeDirectories?: () => string[]
   }): PanelContext {
     const panel = vscode.window.createWebviewPanel(
-      "kilo-code.new.AgentManagerPanel",
+      "hybrid-ai-runtime.kilo-code.AgentManagerPanel",
       "Agent Manager",
       vscode.ViewColumn.One,
       {
@@ -127,9 +128,9 @@ export class VscodeHost implements Host {
       disableViewedRegistration: true,
       disableStatsPolling: true,
       focusTargetContext: {
-        prompt: "kilo-code.new.agentManagerPromptFocused",
-        mainTerminal: "kilo-code.new.agentManagerMainTerminalFocused",
-        sideTerminal: "kilo-code.new.agentManagerSideTerminalFocused",
+        prompt: "hybrid-ai-runtime.kilo-code.agentManagerPromptFocused",
+        mainTerminal: "hybrid-ai-runtime.kilo-code.agentManagerMainTerminalFocused",
+        sideTerminal: "hybrid-ai-runtime.kilo-code.agentManagerSideTerminalFocused",
       },
       routeService: this.routes,
       projectQualifier: () => {
@@ -277,11 +278,11 @@ export class VscodeHost implements Host {
   }
 
   multiProject(): boolean {
-    return vscode.workspace.getConfiguration("kilo-code.new.experimental").get("multiProject", false)
+    return vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.experimental").get("multiProject", false)
   }
 
   browserAutomation(): boolean {
-    return vscode.workspace.getConfiguration("kilo-code.new.experimental").get("browserAutomation", false)
+    return vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.experimental").get("browserAutomation", false)
   }
 
   readProjects(): unknown {
@@ -314,7 +315,7 @@ export class VscodeHost implements Host {
 
   onDidChangeMultiProject(cb: (enabled: boolean) => void): Disposable {
     return vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("kilo-code.new.experimental.multiProject")) cb(this.multiProject())
+      if (e.affectsConfiguration("hybrid-ai-runtime.kilo-code.experimental.multiProject")) cb(this.multiProject())
     })
   }
 
@@ -323,7 +324,7 @@ export class VscodeHost implements Host {
   }
 
   autoBranchNaming(): { enabled: boolean; prefix: string } {
-    const cfg = vscode.workspace.getConfiguration("kilo-code.new.agentManager")
+    const cfg = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.agentManager")
     return {
       enabled: cfg.get("autoBranchNaming", true),
       prefix: cfg.get("branchPrefix", ""),
@@ -361,7 +362,7 @@ export class VscodeHost implements Host {
   }
 
   extensionKeybindings(): Array<{ command: string; key?: string; mac?: string; when?: string }> {
-    const ext = vscode.extensions.getExtension("kilocode.kilo-code")
+    const ext = vscode.extensions.getExtension(EXTENSION_ID)
     return ext?.packageJSON?.contributes?.keybindings ?? []
   }
 
@@ -378,7 +379,7 @@ export class VscodeHost implements Host {
   }
 
   openSettings(tab?: string, projectId?: string): void {
-    void vscode.commands.executeCommand("kilo-code.new.settingsButtonClicked", tab, projectId)
+    void vscode.commands.executeCommand("hybrid-ai-runtime.kilo-code.settingsButtonClicked", tab, projectId)
   }
 
   refreshGit(): void {

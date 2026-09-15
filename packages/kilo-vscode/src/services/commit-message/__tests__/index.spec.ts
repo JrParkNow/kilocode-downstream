@@ -66,11 +66,11 @@ describe("commit-message service", () => {
       expect(disposables.length).toBeGreaterThan(0)
     })
 
-    it("registers the kilo-code.new.generateCommitMessage command", () => {
+    it("registers the hybrid-ai-runtime.kilo-code.generateCommitMessage command", () => {
       registerCommitMessageService(mockContext, mockConnectionService)
 
       expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
-        "kilo-code.new.generateCommitMessage",
+        "hybrid-ai-runtime.kilo-code.generateCommitMessage",
         expect.any(Function),
       )
     })

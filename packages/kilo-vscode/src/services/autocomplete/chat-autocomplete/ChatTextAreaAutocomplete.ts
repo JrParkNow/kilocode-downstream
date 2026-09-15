@@ -77,7 +77,7 @@ export class ChatTextAreaAutocomplete {
   }
 
   async getCompletion(userText: string, visibleCodeContext?: VisibleCodeContext): Promise<{ suggestion: string }> {
-    const cfg = vscode.workspace.getConfiguration("kilo-code.new.autocomplete")
+    const cfg = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.autocomplete")
     const entry = getChatAutocompleteModel(cfg.get<string>("provider"), cfg.get<string>("model"))
     const startTime = Date.now()
 

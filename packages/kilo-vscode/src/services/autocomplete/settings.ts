@@ -17,7 +17,7 @@ export async function routeAutocompleteMessage(message: Message, post: Post): Pr
 }
 
 export function buildAutocompleteSettingsMessage() {
-  const config = vscode.workspace.getConfiguration("kilo-code.new.autocomplete")
+  const config = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.autocomplete")
   // Pass through provider/model as-is (null when unset) so the webview can
   // distinguish "user hasn't picked" from "user picked the current default."
   // The runtime resolves null → DEFAULT_AUTOCOMPLETE_MODEL via getAutocompleteModel().
@@ -36,7 +36,7 @@ export function buildAutocompleteSettingsMessage() {
 /** Push autocomplete settings to the webview whenever VS Code config changes. */
 export function watchAutocompleteConfig(post: Post): vscode.Disposable {
   return vscode.workspace.onDidChangeConfiguration((e) => {
-    if (e.affectsConfiguration("kilo-code.new.autocomplete")) {
+    if (e.affectsConfiguration("hybrid-ai-runtime.kilo-code.autocomplete")) {
       post(buildAutocompleteSettingsMessage())
     }
   })

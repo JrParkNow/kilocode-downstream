@@ -56,18 +56,18 @@ export async function activate(context: vscode.ExtensionContext) {
   console.log("Kilo Code extension is now active")
   shuttingDown = false
 
-  // Drives the "!kilo-code.new.isCursor" guards on the native view/title and
+  // Drives the "!hybrid-ai-runtime.kilo-code.isCursor" guards on the native view/title and
   // editor/title menu contributions — see isCursorHost() for why.
-  void vscode.commands.executeCommand("setContext", "kilo-code.new.isCursor", isCursorHost())
+  void vscode.commands.executeCommand("setContext", "hybrid-ai-runtime.kilo-code.isCursor", isCursorHost())
 
   const telemetry = TelemetryProxy.getInstance()
 
   const browserBroker = new BrowserBroker({
     log: (...args) => console.warn("[Kilo New] BrowserBroker:", ...args),
-    enabled: () => vscode.workspace.getConfiguration("kilo-code.new.experimental").get("browserAutomation", false),
+    enabled: () => vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.experimental").get("browserAutomation", false),
     trusted: () => vscode.workspace.isTrusted,
     useSystemChrome: () =>
-      vscode.workspace.getConfiguration("kilo-code.new.browserAutomation").get("useSystemChrome", true),
+      vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.browserAutomation").get("useSystemChrome", true),
   })
 
   // Create shared connection service (one server for all webviews)
@@ -137,7 +137,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Create the provider with shared service
   const provider = new KiloProvider(context.extensionUri, connectionService, context, {
-    focusContext: "kilo-code.new.sidebarFocused",
+    focusContext: "hybrid-ai-runtime.kilo-code.sidebarFocused",
   })
   provider.setRemoteService(remoteService)
 
@@ -169,12 +169,12 @@ export async function activate(context: vscode.ExtensionContext) {
   // terminal.integrated.commandsToSkipShell, which only contains built-in
   // commands by default.
   const skip = [
-    "kilo-code.new.agentManagerOpen",
-    "kilo-code.new.agentManager.showTerminal",
-    "kilo-code.new.agentManager.previousTerminal",
-    "kilo-code.new.agentManager.nextTerminal",
+    "hybrid-ai-runtime.kilo-code.agentManagerOpen",
+    "hybrid-ai-runtime.kilo-code.agentManager.showTerminal",
+    "hybrid-ai-runtime.kilo-code.agentManager.previousTerminal",
+    "hybrid-ai-runtime.kilo-code.agentManager.nextTerminal",
   ]
-  if (process.platform === "darwin") skip.push("kilo-code.new.agentManager.runScript")
+  if (process.platform === "darwin") skip.push("hybrid-ai-runtime.kilo-code.agentManager.runScript")
   ensureCommandsSkipShell(skip)
 
   // Create KiloClaw chat provider for editor panel
@@ -244,7 +244,7 @@ export async function activate(context: vscode.ExtensionContext) {
   agentManager = agentManagerProvider
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration("kilo-code.new.experimental.browserAutomation")) {
+      if (event.affectsConfiguration("hybrid-ai-runtime.kilo-code.experimental.browserAutomation")) {
         agentManagerProvider.refreshBrowserAutomation()
       }
     }),
@@ -298,7 +298,7 @@ export async function activate(context: vscode.ExtensionContext) {
     os: showOSNotification,
     show: async (sessionID, directory) => {
       if (await agentManagerProvider.revealSession(sessionID)) return
-      await vscode.commands.executeCommand("kilo-code.SidebarProvider.focus")
+      await vscode.commands.executeCommand("hybrid-ai-runtime-kilo-code-SidebarProvider.focus")
       await provider.openSession(sessionID, directory)
     },
   })
@@ -362,7 +362,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register serializer so "Open in Tab" restores when VS Code restarts
   context.subscriptions.push(
-    vscode.window.registerWebviewPanelSerializer("kilo-code.new.TabPanel", {
+    vscode.window.registerWebviewPanelSerializer("hybrid-ai-runtime.kilo-code.TabPanel", {
       deserializeWebviewPanel(panel: vscode.WebviewPanel) {
         const tabProvider = attach(panel)
         panel.onDidDispose(
@@ -426,7 +426,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const settingsViews = ["settingsPanel", "profilePanel"] as const
   for (const suffix of settingsViews) {
     context.subscriptions.push(
-      vscode.window.registerWebviewPanelSerializer(`kilo-code.new.${suffix}`, {
+      vscode.window.registerWebviewPanelSerializer(`hybrid-ai-runtime.kilo-code.${suffix}`, {
         deserializeWebviewPanel(panel: vscode.WebviewPanel) {
           settingsEditorProvider.deserializePanel(panel)
           return Promise.resolve()
@@ -463,7 +463,7 @@ export async function activate(context: vscode.ExtensionContext) {
   )
 
   context.subscriptions.push(
-    vscode.window.registerWebviewPanelSerializer("kilo-code.new.SubAgentViewerPanel", {
+    vscode.window.registerWebviewPanelSerializer("hybrid-ai-runtime.kilo-code.SubAgentViewerPanel", {
       deserializeWebviewPanel(panel: vscode.WebviewPanel) {
         // Sub-agent viewer requires a session ID that can't be recovered
         // after restart, so dispose the stale panel cleanly.
@@ -485,88 +485,88 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register toolbar button command handlers
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.sidebarTitle.plusButtonClicked", () => {
-      track("new_task", "kilo-code.new.plusButtonClicked")
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.sidebarTitle.plusButtonClicked", () => {
+      track("new_task", "hybrid-ai-runtime.kilo-code.plusButtonClicked")
     }),
-    vscode.commands.registerCommand("kilo-code.new.sidebarTitle.historyButtonClicked", () => {
-      track("history", "kilo-code.new.historyButtonClicked")
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.sidebarTitle.historyButtonClicked", () => {
+      track("history", "hybrid-ai-runtime.kilo-code.historyButtonClicked")
     }),
-    vscode.commands.registerCommand("kilo-code.new.sidebarTitle.agentManagerOpen", () => {
-      track("agent_manager", "kilo-code.new.agentManagerOpen")
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.sidebarTitle.agentManagerOpen", () => {
+      track("agent_manager", "hybrid-ai-runtime.kilo-code.agentManagerOpen")
     }),
-    vscode.commands.registerCommand("kilo-code.new.sidebarTitle.kiloClawOpen", () => {
-      track("kiloclaw", "kilo-code.new.kiloClawOpen")
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.sidebarTitle.kiloClawOpen", () => {
+      track("kiloclaw", "hybrid-ai-runtime.kilo-code.kiloClawOpen")
     }),
-    vscode.commands.registerCommand("kilo-code.new.sidebarTitle.marketplaceButtonClicked", () => {
-      track("marketplace", "kilo-code.new.marketplaceButtonClicked")
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.sidebarTitle.marketplaceButtonClicked", () => {
+      track("marketplace", "hybrid-ai-runtime.kilo-code.marketplaceButtonClicked")
     }),
-    vscode.commands.registerCommand("kilo-code.new.sidebarTitle.profileButtonClicked", () => {
-      track("profile", "kilo-code.new.profileButtonClicked")
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.sidebarTitle.profileButtonClicked", () => {
+      track("profile", "hybrid-ai-runtime.kilo-code.profileButtonClicked")
     }),
-    vscode.commands.registerCommand("kilo-code.new.sidebarTitle.settingsButtonClicked", () => {
-      track("settings", "kilo-code.new.settingsButtonClicked")
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.sidebarTitle.settingsButtonClicked", () => {
+      track("settings", "hybrid-ai-runtime.kilo-code.settingsButtonClicked")
     }),
-    vscode.commands.registerCommand("kilo-code.new.plusButtonClicked", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.plusButtonClicked", () => {
       const tab = activeTabProvider()
       if (tab) tab.postMessage({ type: "action", action: "plusButtonClicked" })
       else provider.postMessage({ type: "action", action: "plusButtonClicked" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManagerOpen", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManagerOpen", () => {
       agentManagerProvider.openPanel()
     }),
-    vscode.commands.registerCommand("kilo-code.new.marketplaceButtonClicked", (directory?: string | null) => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.marketplaceButtonClicked", (directory?: string | null) => {
       marketplacePanelProvider.openPanel(directory)
     }),
-    vscode.commands.registerCommand("kilo-code.new.kiloClawOpen", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.kiloClawOpen", () => {
       kiloClawProvider.openPanel()
     }),
-    vscode.commands.registerCommand("kilo-code.new.historyButtonClicked", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.historyButtonClicked", () => {
       const tab = activeTabProvider()
       if (tab) tab.postMessage({ type: "action", action: "historyButtonClicked" })
       else provider.postMessage({ type: "action", action: "historyButtonClicked" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.cycleAgentMode", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.cycleAgentMode", () => {
       const tab = activeTabProvider()
       if (tab) tab.postMessage({ type: "action", action: "cycleAgentMode" })
       else provider.postMessage({ type: "action", action: "cycleAgentMode" })
       agentManagerProvider.postMessage({ type: "action", action: "cycleAgentMode" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.cyclePreviousAgentMode", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.cyclePreviousAgentMode", () => {
       const tab = activeTabProvider()
       if (tab) tab.postMessage({ type: "action", action: "cyclePreviousAgentMode" })
       else provider.postMessage({ type: "action", action: "cyclePreviousAgentMode" })
       agentManagerProvider.postMessage({ type: "action", action: "cyclePreviousAgentMode" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.profileButtonClicked", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.profileButtonClicked", () => {
       settingsEditorProvider.openPanel("profile")
     }),
-    vscode.commands.registerCommand("kilo-code.new.settingsButtonClicked", (tab?: string, projectId?: string) => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.settingsButtonClicked", (tab?: string, projectId?: string) => {
       settingsEditorProvider.openPanel("settings", tab, projectId)
     }),
-    vscode.commands.registerCommand("kilo-code.new.openIndexingSettings", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.openIndexingSettings", () => {
       settingsEditorProvider.openPanel("settings", "indexing")
     }),
-    vscode.commands.registerCommand("kilo-code.new.showMemory", async () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.showMemory", async () => {
       if (agentManagerProvider.isActive()) {
         await agentManagerProvider.showMemory()
         return
       }
       const target = activeTabProvider() ?? provider
-      if (target === provider) await vscode.commands.executeCommand("kilo-code.SidebarProvider.focus")
+      if (target === provider) await vscode.commands.executeCommand("hybrid-ai-runtime-kilo-code-SidebarProvider.focus")
       await target.waitForReady()
       await target.showMemory()
     }),
-    vscode.commands.registerCommand("kilo-code.new.toggleMemory", async () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.toggleMemory", async () => {
       if (agentManagerProvider.isActive()) {
         await agentManagerProvider.toggleMemory()
         return
       }
       const target = activeTabProvider() ?? provider
-      if (target === provider) await vscode.commands.executeCommand("kilo-code.SidebarProvider.focus")
+      if (target === provider) await vscode.commands.executeCommand("hybrid-ai-runtime-kilo-code-SidebarProvider.focus")
       await target.waitForReady()
       await target.toggleMemory()
     }),
-    vscode.commands.registerCommand("kilo-code.new.toggleCaffeination", (enabled?: boolean) => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.toggleCaffeination", (enabled?: boolean) => {
       const state = awake.getState()
       const next = typeof enabled === "boolean" ? enabled : !(state.enabled || state.active)
       if (next && !state.available) {
@@ -574,111 +574,111 @@ export async function activate(context: vscode.ExtensionContext) {
       }
       return toggle(next)
     }),
-    vscode.commands.registerCommand("kilo-code.new.generateTerminalCommand", async () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.generateTerminalCommand", async () => {
       const input = await vscode.window.showInputBox({
         prompt: "Describe the terminal command you want to generate",
         placeHolder: "e.g., find all .ts files modified in the last 24 hours",
       })
       if (!input) return
-      await vscode.commands.executeCommand("kilo-code.SidebarProvider.focus")
+      await vscode.commands.executeCommand("hybrid-ai-runtime-kilo-code-SidebarProvider.focus")
       await provider.waitForReady()
       provider.postMessage({ type: "triggerTask", text: `Generate a terminal command: ${input}` })
     }),
-    vscode.commands.registerCommand("kilo-code.new.toggleRemote", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.toggleRemote", () => {
       remoteService.toggle().catch((err) => console.error("[Kilo New] toggleRemote command failed:", err))
     }),
-    vscode.commands.registerCommand("kilo-code.new.openInTab", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.openInTab", () => {
       return openKiloInNewTab(context, tabPanels, attach)
     }),
     vscode.commands.registerCommand(
-      "kilo-code.new.showChanges",
+      "hybrid-ai-runtime.kilo-code.showChanges",
       (arg?: Parameters<DiffViewerProvider["openFromCommand"]>[0]) => {
         diffViewerProvider.openFromCommand(arg)
       },
     ),
     vscode.commands.registerCommand(
-      "kilo-code.new.openSubAgentViewer",
+      "hybrid-ai-runtime.kilo-code.openSubAgentViewer",
       (sessionID: string, title?: string, directory?: string) => {
         subAgentViewerProvider.openPanel(sessionID, title, directory)
       },
     ),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.previousSession", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.previousSession", () => {
       agentManagerProvider.postMessage({ type: "action", action: "sessionPrevious" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.nextSession", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.nextSession", () => {
       agentManagerProvider.postMessage({ type: "action", action: "sessionNext" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.previousTab", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.previousTab", () => {
       agentManagerProvider.postMessage({ type: "action", action: "tabPrevious" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.nextTab", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.nextTab", () => {
       agentManagerProvider.postMessage({ type: "action", action: "tabNext" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.previousTerminal", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.previousTerminal", () => {
       agentManagerProvider.postMessage({ type: "action", action: "terminalPrevious" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.nextTerminal", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.nextTerminal", () => {
       agentManagerProvider.postMessage({ type: "action", action: "terminalNext" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.search", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.search", () => {
       agentManagerProvider.postMessage({ type: "action", action: "search" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.showTerminal", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.showTerminal", () => {
       // Route through the webview so it can reach into the active session
       // state and open the VS Code integrated terminal for it.
       agentManagerProvider.postMessage({ type: "action", action: "showTerminal" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.runScript", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.runScript", () => {
       agentManagerProvider.postMessage({ type: "action", action: "runScript" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.toggleDiff", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.toggleDiff", () => {
       agentManagerProvider.postMessage({ type: "action", action: "toggleDiff" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.showShortcuts", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.showShortcuts", () => {
       agentManagerProvider.postMessage({ type: "action", action: "showShortcuts" })
     }),
 
-    vscode.commands.registerCommand("kilo-code.new.agentManager.newTab", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.newTab", () => {
       agentManagerProvider.postMessage({ type: "action", action: "newTab" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.newTerminalTab", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.newTerminalTab", () => {
       agentManagerProvider.postMessage({ type: "action", action: "newTerminalTab" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.newSideTerminal", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.newSideTerminal", () => {
       agentManagerProvider.postMessage({ type: "action", action: "newSideTerminal" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.closeTab", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.closeTab", () => {
       agentManagerProvider.postMessage({ type: "action", action: "closeTab" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.newWorktree", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.newWorktree", () => {
       agentManagerProvider.postMessage({ type: "action", action: "newWorktree" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.quickWorktree", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.quickWorktree", () => {
       agentManagerProvider.postMessage({ type: "action", action: "quickWorktree" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.openWorktree", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.openWorktree", () => {
       agentManagerProvider.postMessage({ type: "action", action: "openWorktree" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.updateFromBase", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.updateFromBase", () => {
       agentManagerProvider.postMessage({ type: "action", action: "updateFromBase" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.openPR", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.openPR", () => {
       agentManagerProvider.postMessage({ type: "action", action: "openPR" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.closeWorktree", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.closeWorktree", () => {
       agentManagerProvider.postMessage({ type: "action", action: "closeWorktree" })
     }),
-    vscode.commands.registerCommand("kilo-code.new.agentManager.advancedWorktree", () =>
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.agentManager.advancedWorktree", () =>
       agentManagerProvider.openAdvancedWorktree(),
     ),
     ...Array.from({ length: 9 }, (_, i) =>
-      vscode.commands.registerCommand(`kilo-code.new.agentManager.jumpTo${i + 1}`, () => {
+      vscode.commands.registerCommand(`hybrid-ai-runtime.kilo-code.agentManager.jumpTo${i + 1}`, () => {
         agentManagerProvider.postMessage({ type: "action", action: `jumpTo${i + 1}` })
       }),
     ),
   )
 
-  // Register URI handler for extension deep links (vscode://kilocode.kilo-code/kilocode/...)
+  // Register URI handler for extension deep links (vscode://hybrid-ai-runtime.kilo-code/kilocode/...)
   context.subscriptions.push(
     vscode.window.registerUriHandler({
       async handleUri(uri: vscode.Uri) {
@@ -712,7 +712,7 @@ export async function activate(context: vscode.ExtensionContext) {
   registerHeapSnapshot(context, connectionService)
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.reload", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.reload", () => {
       provider.reload().catch((e) => console.error("[Kilo New] reload command failed:", e))
     }),
   )
@@ -762,7 +762,7 @@ function openKiloInNewTab(
   attach: (panel: vscode.WebviewPanel) => KiloProvider,
 ) {
   const panel = vscode.window.createWebviewPanel(
-    "kilo-code.new.TabPanel",
+    "hybrid-ai-runtime.kilo-code.TabPanel",
     EXTENSION_DISPLAY_NAME,
     vscode.ViewColumn.Active,
     {

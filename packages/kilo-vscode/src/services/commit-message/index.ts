@@ -34,7 +34,7 @@ export function registerCommitMessageService(
   connectionService: KiloConnectionService,
 ): vscode.Disposable[] {
   const command = vscode.commands.registerCommand(
-    "kilo-code.new.generateCommitMessage",
+    "hybrid-ai-runtime.kilo-code.generateCommitMessage",
     async (arg?: vscode.SourceControl) => {
       const extension = vscode.extensions.getExtension<GitExtensionExports>("vscode.git")
       if (!extension) {

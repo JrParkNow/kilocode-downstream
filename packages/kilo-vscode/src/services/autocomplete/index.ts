@@ -22,33 +22,33 @@ export const registerAutocompleteProvider = async (
 
   // Register AutocompleteServiceManager Commands
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.autocomplete.reload", async () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.autocomplete.reload", async () => {
       await autocompleteManager.load()
     }),
   )
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.autocomplete.codeActionQuickFix", async () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.autocomplete.codeActionQuickFix", async () => {
       return
     }),
   )
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.autocomplete.cancelSuggestions", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.autocomplete.cancelSuggestions", () => {
       vscode.commands.executeCommand("editor.action.inlineSuggest.hide")
-      vscode.commands.executeCommand("setContext", "kilo-code.new.autocomplete.hasSuggestions", false)
+      vscode.commands.executeCommand("setContext", "hybrid-ai-runtime.kilo-code.autocomplete.hasSuggestions", false)
     }),
   )
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.autocomplete.generateSuggestions", async () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.autocomplete.generateSuggestions", async () => {
       autocompleteManager.codeSuggestion()
     }),
   )
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.autocomplete.showIncompatibilityExtensionPopup", async () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.autocomplete.showIncompatibilityExtensionPopup", async () => {
       await autocompleteManager.showIncompatibilityExtensionPopup()
     }),
   )
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.autocomplete.disable", async () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.autocomplete.disable", async () => {
       await autocompleteManager.disable()
     }),
   )
@@ -63,13 +63,13 @@ export const registerAutocompleteProvider = async (
   // Tab handler for off-cursor pending suggestions: first press teleports the
   // cursor to the predicted edit, second press applies.
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.autocomplete.nextEdit.acceptOrJump", async () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.autocomplete.nextEdit.acceptOrJump", async () => {
       await autocompleteManager.nextEditSuggestionManager.acceptOrJump()
     }),
   )
   // Esc handler: dismiss the pending suggestion without applying.
   context.subscriptions.push(
-    vscode.commands.registerCommand("kilo-code.new.autocomplete.nextEdit.dismiss", () => {
+    vscode.commands.registerCommand("hybrid-ai-runtime.kilo-code.autocomplete.nextEdit.dismiss", () => {
       autocompleteManager.nextEditSuggestionManager.clear()
     }),
   )
@@ -85,7 +85,7 @@ export const registerAutocompleteProvider = async (
   // Also ensure the CLI backend is running when autocomplete gets enabled.
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("kilo-code.new.autocomplete")) {
+      if (e.affectsConfiguration("hybrid-ai-runtime.kilo-code.autocomplete")) {
         ensureBackendForAutocomplete(connectionService)
         void autocompleteManager.load()
       }

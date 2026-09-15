@@ -4,7 +4,7 @@ type Post = (msg: unknown) => void
 
 /** Whether Agent Manager fix prompts ask the agent to commit and push so the pull request updates. */
 export function pushFixes(): boolean {
-  return vscode.workspace.getConfiguration("kilo-code.new.agentManager").get<boolean>("pushFixes", true)
+  return vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.agentManager").get<boolean>("pushFixes", true)
 }
 
 export function buildPushFixesSettingMessage() {
@@ -17,7 +17,7 @@ export function buildPushFixesSettingMessage() {
 /** Push the setting to every webview when another surface changes it. */
 export function watchPushFixesConfig(post: Post): vscode.Disposable {
   return vscode.workspace.onDidChangeConfiguration((event) => {
-    if (!event.affectsConfiguration("kilo-code.new.agentManager.pushFixes")) return
+    if (!event.affectsConfiguration("hybrid-ai-runtime.kilo-code.agentManager.pushFixes")) return
     post(buildPushFixesSettingMessage())
   })
 }

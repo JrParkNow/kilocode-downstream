@@ -17,7 +17,7 @@ export interface DocumentViewerOptions {
 }
 
 export class DocumentViewerProvider implements vscode.Disposable {
-  public static readonly viewType = "kilo-code.new.DocumentsPanel"
+  public static readonly viewType = "hybrid-ai-runtime.kilo-code.DocumentsPanel"
   private panel: vscode.WebviewPanel | undefined
   private pending: { file: string; sessionId?: string; directory?: string; line?: number; column?: number } | undefined
   private readonly contexts = new Map<string, Context>()

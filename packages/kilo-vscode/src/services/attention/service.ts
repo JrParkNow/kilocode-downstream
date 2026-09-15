@@ -164,7 +164,7 @@ export class AttentionService implements vscode.Disposable {
   }
 
   private sound(sound: TuiAttentionSoundName) {
-    const config = vscode.workspace.getConfiguration("kilo-code.new.attention")
+    const config = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.attention")
     if (!config.get<boolean>("enabled", false)) return
     void playSound(sound, resolveSoundID(config.get<string>("sound", "default")))
   }
@@ -203,7 +203,7 @@ export class AttentionService implements vscode.Disposable {
 
   /** Picks which delivery channels should fire; independently, both, one, or neither. */
   private channels(sessionID: string) {
-    const config = vscode.workspace.getConfiguration("kilo-code.new.attention")
+    const config = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.attention")
     const focused = this.opts.focused?.() ?? vscode.window.state.focused
     // `os` is only wired up on hosts that can deliver a native notification, so other platforms fall through.
     const os = Boolean(this.opts.os) && config.get<boolean>("OSNotifications", false) && !focused

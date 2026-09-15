@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 
-const CONFIG = "kilo-code.new"
+const CONFIG = "hybrid-ai-runtime.kilo-code"
 const KEY = "diff.renderMarkdown"
 
 export function getDiffMarkdownRender(): boolean {

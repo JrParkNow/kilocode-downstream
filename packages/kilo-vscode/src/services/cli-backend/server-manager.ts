@@ -7,6 +7,7 @@ import * as vscode from "vscode"
 import { resolveLocalBwrapEnv, resolveTreeSitterEnv } from "./cli-resources"
 import { t } from "./i18n"
 import { scanServerPort } from "./server-utils"
+import { resolvePrivateCliEnv } from "./private-cli-env"
 
 export interface ServerInstance {
   port: number
@@ -98,7 +99,7 @@ export class ServerManager {
     const extraEnv = await this.env?.()
     return new Promise((resolve, reject) => {
       console.log("[Kilo New] ServerManager: 🎬 Spawning CLI process:", cliPath, ["serve", "--port", "0"])
-      const cfg = vscode.workspace.getConfiguration("kilo-code.new")
+      const cfg = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code")
       const claudeCompat = cfg.get<boolean>("claudeCodeCompat", false)
       const claudeMigration = resolveClaudeMigrationEnv(
         { ...process.env, ...(extraEnv ?? {}) },
@@ -119,7 +120,7 @@ export class ServerManager {
       //     trust store (Windows cert store, macOS keychain, Linux /etc/ssl).
       //     Mirrors VS Code's `http.systemCertificates` default (true).
       //   - Allow users behind MITM proxies to point at a custom CA bundle via
-      //     `kilo-code.new.extraCaCerts` (NODE_EXTRA_CA_CERTS).
+      //     `hybrid-ai-runtime.kilo-code.extraCaCerts` (NODE_EXTRA_CA_CERTS).
       //   - Honor VS Code's `http.proxyStrictSSL=false` as an explicit opt-out
       //     from verification, matching what VS Code already does for its own
       //     requests. Users explicitly set that; we don't flip it ourselves.
@@ -133,6 +134,7 @@ export class ServerManager {
           ...(extraCaCerts && { NODE_EXTRA_CA_CERTS: extraCaCerts }),
           ...(!proxyStrictSSL && { NODE_TLS_REJECT_UNAUTHORIZED: "0" }),
           ...resolveManagedServerEnv(process.env),
+          ...resolvePrivateCliEnv(this.context.globalStorageUri.fsPath),
           // VS Code's http.proxy / http.noProxy settings are not reflected in
           // process.env, so spawned children bypass the user's configured proxy
           // and fail behind corporate firewalls. Forward them as the standard

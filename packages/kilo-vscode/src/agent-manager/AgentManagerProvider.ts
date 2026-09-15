@@ -87,7 +87,7 @@ import { createBrowserLifecycle } from "./browser-lifecycle"
 import { handleSessionLifecycle } from "./session-lifecycle"
 import { isRestrictedRoot } from "./home-workspace"
 export class AgentManagerProvider implements Disposable {
-  public static readonly viewType = "kilo-code.new.AgentManagerPanel"
+  public static readonly viewType = "hybrid-ai-runtime.kilo-code.AgentManagerPanel"
   private panel: PanelContext | undefined
   private outputChannel: OutputHandle
   private readonly registry: ProjectRegistry

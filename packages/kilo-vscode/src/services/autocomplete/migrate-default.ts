@@ -4,7 +4,7 @@ import { DEFAULT_AUTOCOMPLETE_MODEL } from "../../shared/autocomplete-models"
 const FLAG = "kilo.autocomplete.defaultClearMigrationV1"
 
 /**
- * One-time migration: clear `kilo-code.new.autocomplete.{provider,model}` when
+ * One-time migration: clear `hybrid-ai-runtime.kilo-code.autocomplete.{provider,model}` when
  * they exactly match the current `DEFAULT_AUTOCOMPLETE_MODEL`. Many users have
  * the default explicitly stored only because it was the only thing visible in
  * the dropdown — leaving it pinned would block them from picking up future
@@ -20,7 +20,7 @@ const FLAG = "kilo.autocomplete.defaultClearMigrationV1"
 export async function migrateDefaultAutocompleteSettings(context: vscode.ExtensionContext): Promise<void> {
   if (context.globalState.get<boolean>(FLAG)) return
 
-  const config = vscode.workspace.getConfiguration("kilo-code.new.autocomplete")
+  const config = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code.autocomplete")
   // Read the user/global scope specifically. `get()` returns the merged
   // effective value (workspace > global > default), which would let a
   // workspace-level pin or the schema default falsely look like a stored

@@ -14,7 +14,7 @@ import type { KiloConnectionService } from "../cli-backend"
 import { hasValidCredentials, fimModel as notebookModel } from "./fim"
 import { DEFAULT_AUTOCOMPLETE_MODEL, getAutocompleteModel } from "../../shared/autocomplete-models"
 
-const CONFIG_SECTION = "kilo-code.new.autocomplete"
+const CONFIG_SECTION = "hybrid-ai-runtime.kilo-code.autocomplete"
 
 export function selector(kind: "classic" | "next-edit"): vscode.DocumentSelector {
   return kind === "classic" ? [{ scheme: "file" }, { scheme: "vscode-notebook-cell" }] : [{ scheme: "file" }]
@@ -173,7 +173,7 @@ export class AutocompleteServiceManager {
     )
 
     this.config = vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration("kilo-code.new.language")) {
+      if (event.affectsConfiguration("hybrid-ai-runtime.kilo-code.language")) {
         this.updateStatusBar()
       }
     })
@@ -456,7 +456,7 @@ export class AutocompleteServiceManager {
     if (response === disableCopilot) {
       await vscode.commands.executeCommand("github.copilot.completions.disable")
     } else if (response === disableInlineAssist) {
-      await vscode.commands.executeCommand("kilo-code.new.autocomplete.disable")
+      await vscode.commands.executeCommand("hybrid-ai-runtime.kilo-code.autocomplete.disable")
     }
   }
 

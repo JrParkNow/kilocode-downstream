@@ -14,7 +14,7 @@ export async function executeVscodeTask(config: SetupTaskConfig): Promise<number
     env: config.env,
   })
   const task = new vscode.Task(
-    { type: "kilo-worktree-setup", script: config.command },
+    { type: "hybrid-ai-runtime-kilo-worktree-setup", script: config.command },
     vscode.TaskScope.Workspace,
     "Worktree Setup",
     "Kilo Code",

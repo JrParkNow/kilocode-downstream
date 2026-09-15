@@ -63,13 +63,13 @@ export function resolveLocale(lang: string | undefined): string {
 }
 
 export function selectedLocale(vscode: typeof import("vscode")): string {
-  const cfg = vscode.workspace.getConfiguration("kilo-code.new")
+  const cfg = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code")
   const lang = cfg.get<string>("language")
   return resolveLocale(lang || vscode.env.language)
 }
 
 export function getCommitMessageLanguage(vscode: typeof import("vscode")): string {
-  const cfg = vscode.workspace.getConfiguration("kilo-code.new")
+  const cfg = vscode.workspace.getConfiguration("hybrid-ai-runtime.kilo-code")
   const commitLang = cfg.get<string>("languageCommitMessage") ?? "sync"
   if (commitLang === "sync") return selectedLocale(vscode)
   return resolveLocale(commitLang)

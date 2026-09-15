@@ -6,7 +6,7 @@ export function watchFontSizeConfig(
   next?: vscode.Disposable,
 ) {
   const font = vscode.workspace.onDidChangeConfiguration((event) => {
-    if (event.affectsConfiguration("kilo-code.new.fontSize"))
+    if (event.affectsConfiguration("hybrid-ai-runtime.kilo-code.fontSize"))
       post({ type: "fontSizeChanged", fontSize: getWebviewFontSize() })
   })
   return next ? vscode.Disposable.from(font, next) : font
