@@ -1,6 +1,7 @@
 import { Agent } from "@/agent/agent"
 import { KiloSessionPrompt } from "@/kilocode/session/prompt" // kilocode_change
 import { GoalPolicy } from "@/kilocode/session/goal/policy" // kilocode_change
+import { KiloSessionMessageOrder } from "@/kilocode/session/message-order" // kilocode_change
 import { MemoryMarker } from "@/kilocode/memory/marker" // kilocode_change
 import { BoardNotice } from "@/kilocode/board/notice" // kilocode_change
 import { SessionV1 } from "@opencode-ai/core/v1/session"
@@ -100,6 +101,23 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   // kilocode_change end
   const restricted = yield* SandboxPolicy.networkRestricted(input.session.id) // kilocode_change
   const sandboxed = (yield* SandboxPolicy.status(input.session.id)).enabled // kilocode_change
+
+  // kilocode_change start - PERF-4C.3A evidence-completion synthesis gate
+  const latest = KiloSessionMessageOrder.latest(input.messages)
+  const synthesisOnly =
+    input.agent.name === "code" &&
+    latest.user &&
+    latest.assistant &&
+    latest.assistant.parentID === latest.user.id &&
+    latest.assistantMessage?.parts.some(
+      (part) =>
+        part.type === "tool" &&
+        part.tool === "evidence_complete" &&
+        part.state.status === "completed",
+    ) === true
+
+  if (synthesisOnly) return {}
+  // kilocode_change end
   const context = (args: Record<string, unknown>, options: ToolExecutionOptions): Tool.Context => {
     const extra = {
       model: input.model,
@@ -183,6 +201,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     networkRestricted: restricted, // kilocode_change - let the registry suppress code-mode in restricted sessions
   })) {
     if (!GoalPolicy.available(input.session.id, item.id)) continue // kilocode_change
+    if (item.id === "evidence_complete" && input.agent.name !== "code") continue // kilocode_change
     const base = ToolJsonSchema.fromTool(item)
     const schema = ProviderTransform.schema(input.model, base)
     tools[item.id] = tool({

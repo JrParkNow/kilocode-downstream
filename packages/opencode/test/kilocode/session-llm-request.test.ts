@@ -130,6 +130,31 @@ describe("Kilo persona in generated metadata requests", () => {
   })
 })
 
+describe("Code evidence-sufficiency guidance", () => {
+  test("adds evidence-sufficiency guidance to ordinary Code requests", async () => {
+    const result = await prepare("code")
+    const oauth = await prepare("code", true)
+
+    for (const system of [
+      result.system[0],
+      oauth.params.options.instructions,
+    ]) {
+      expect(system).toContain("minimum sufficient evidence")
+      expect(system).toContain("concrete unresolved question")
+      expect(system).toContain("material contradiction")
+      expect(system).toContain("evidence_complete")
+      expect(system).toContain("Do not gather additional evidence merely for more confidence")
+    }
+  })
+
+  test("does not add Code evidence-sufficiency guidance to non-Code requests", async () => {
+    const result = await prepare("plan")
+
+    expect(result.system[0]).not.toContain("minimum sufficient evidence")
+    expect(result.system[0]).not.toContain("evidence_complete")
+  })
+})
+
 describe("LLM request headers", () => {
   for (const name of ["opencode", "opencode-go"]) {
     it.instance(

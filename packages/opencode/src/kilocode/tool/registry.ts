@@ -1,5 +1,6 @@
 import { RecallTool } from "../../tool/recall"
 import { GoalReportTool } from "../session/goal/tool"
+import { EvidenceCompleteTool } from "../session/evidence-completion/tool"
 import { AgentManagerModelsTool } from "./agent-manager-models"
 import { AgentManagerTool } from "./agent-manager"
 import { BackgroundProcessTool } from "./background-process"
@@ -93,6 +94,7 @@ export namespace KiloToolRegistry {
         boardRead: BoardReadTool,
         boardPost: BoardPostTool,
         goalReport: GoalReportTool,
+        evidenceComplete: EvidenceCompleteTool,
       })
       if (!notebook)
         return {
@@ -152,6 +154,7 @@ export namespace KiloToolRegistry {
       send: Tool.Info
       boardRead?: Tool.Info
       goalReport?: Tool.Info
+      evidenceComplete?: Tool.Info
       boardPost?: Tool.Info
       notebookRead?: Tool.Info
       notebookEdit?: Tool.Info
@@ -175,6 +178,9 @@ export namespace KiloToolRegistry {
       })
       const openPlan = tools.openPlan ? yield* Tool.init(tools.openPlan) : undefined
       const report = tools.goalReport ? { goalReport: yield* Tool.init(tools.goalReport) } : {}
+      const evidence = tools.evidenceComplete
+        ? { evidenceComplete: yield* Tool.init(tools.evidenceComplete) }
+        : {}
       const board =
         tools.boardRead && tools.boardPost
           ? yield* Effect.all({ boardRead: Tool.init(tools.boardRead), boardPost: Tool.init(tools.boardPost) })
@@ -193,6 +199,7 @@ export namespace KiloToolRegistry {
         ...base,
         ...board,
         ...report,
+        ...evidence,
         browser,
         ...notebooks,
         semantic,
@@ -264,6 +271,7 @@ export namespace KiloToolRegistry {
       send: Tool.Def
       boardRead?: Tool.Def
       goalReport?: Tool.Def
+      evidenceComplete?: Tool.Def
       boardPost?: Tool.Def
       notebookRead?: Tool.Def
       notebookEdit?: Tool.Def
@@ -285,6 +293,7 @@ export namespace KiloToolRegistry {
     })
     return [
       ...(tools.goalReport ? [tools.goalReport] : []),
+      ...(tools.evidenceComplete ? [tools.evidenceComplete] : []),
       ...(cfg.experimental?.image_generation === true ? [tools.image] : []),
       ...(enabled && tools.boardRead && tools.boardPost ? [tools.boardRead, tools.boardPost] : []),
       ...(tools.semantic ? [tools.semantic] : []),

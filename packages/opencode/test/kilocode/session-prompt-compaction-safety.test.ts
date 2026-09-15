@@ -457,6 +457,221 @@ describe("SessionPrompt compaction safety", () => {
     30_000,
   )
 
+  it.live(
+    "transitions a Code turn from evidence completion to one synthesis-only final response",
+    () =>
+      provideTmpdirServer(
+        Effect.fnUntraced(function* ({ llm }) {
+          const prompt = yield* SessionPrompt.Service
+          const sessions = yield* Session.Service
+          const chat = yield* sessions.create({
+            permission: [{ permission: "*", pattern: "*", action: "allow" }],
+          })
+
+          yield* llm.push(
+            reply().tool("evidence_complete", {
+              reason: "The requested claims are supported and no material unresolved question remains.",
+            }),
+            reply().text("Final evidence-backed answer.").stop(),
+          )
+
+          yield* user(chat.id, "Audit the relevant implementation and report the supported conclusion.")
+
+          const result = yield* prompt.loop({ sessionID: chat.id })
+
+          expect(yield* llm.calls).toBe(2)
+          if (result.info.role !== "assistant") throw new Error("expected assistant result")
+          expect(result.info.finish).toBe("stop")
+          expect(
+            result.parts.some(
+              (part) => part.type === "text" && part.text === "Final evidence-backed answer.",
+            ),
+          ).toBe(true)
+
+          const inputs = yield* llm.inputs
+
+          const persisted = yield* sessions.messages({ sessionID: chat.id })
+          const persistedUser = persisted
+            .filter((message) => message.info.role === "user")
+            .at(-1)
+          const persistedAssistant = persisted
+            .filter((message) => message.info.role === "assistant")
+            .find((message) =>
+              message.parts.some(
+                (part) => part.type === "tool" && part.tool === "evidence_complete",
+              ),
+            )
+
+          expect(persistedUser).toBeDefined()
+          expect(persistedAssistant).toBeDefined()
+          if (!persistedUser || persistedUser.info.role !== "user") {
+            throw new Error("expected persisted user message")
+          }
+          if (!persistedAssistant || persistedAssistant.info.role !== "assistant") {
+            throw new Error("expected persisted assistant message")
+          }
+          expect(persistedAssistant.info.parentID).toBe(persistedUser.info.id)
+
+          const firstTools = JSON.stringify(inputs.at(0)?.tools ?? {})
+          expect(firstTools).toContain('"evidence_complete"')
+
+          const parts = (yield* sessions.messages({ sessionID: chat.id })).flatMap((msg) => msg.parts)
+          expect(
+            parts.some(
+              (part) =>
+                part.type === "tool" &&
+                part.tool === "evidence_complete" &&
+                part.state.status === "completed",
+            ),
+          ).toBe(true)
+
+          const second = inputs.at(1)
+          expect(JSON.stringify(second?.messages)).toContain(
+            "The requested claims are supported and no material unresolved question remains.",
+          )
+
+          const secondTools = JSON.stringify(second?.tools ?? {})
+          expect(secondTools).not.toContain('"grep"')
+          expect(secondTools).not.toContain('"read"')
+          expect(secondTools).not.toContain('"glob"')
+          expect(secondTools).not.toContain('"websearch"')
+          expect(secondTools).not.toContain('"semantic_search"')
+        }),
+        { git: true, config: providerCfg },
+      ),
+    30_000,
+  )
+
+  it.live(
+    "does not expose evidence completion outside Code mode",
+    () =>
+      provideTmpdirServer(
+        Effect.fnUntraced(function* ({ llm }) {
+          const prompt = yield* SessionPrompt.Service
+          const sessions = yield* Session.Service
+          const chat = yield* sessions.create({
+            permission: [{ permission: "*", pattern: "*", action: "allow" }],
+          })
+
+          yield* llm.text("Plan-mode answer.")
+
+          const result = yield* prompt.prompt({
+            sessionID: chat.id,
+            agent: "plan",
+            parts: [{ type: "text", text: "Inspect this in plan mode." }],
+          })
+
+          expect(result.info.role).toBe("assistant")
+          expect(yield* llm.calls).toBe(1)
+
+          const tools = JSON.stringify((yield* llm.inputs).at(0)?.tools ?? {})
+          expect(tools).not.toContain('"evidence_complete"')
+        }),
+        { git: true, config: providerCfg },
+      ),
+    30_000,
+  )
+
+  it.live(
+    "restores normal Code tools on a later user turn after evidence completion",
+    () =>
+      provideTmpdirServer(
+        Effect.fnUntraced(function* ({ llm }) {
+          const prompt = yield* SessionPrompt.Service
+          const sessions = yield* Session.Service
+          const chat = yield* sessions.create({
+            permission: [{ permission: "*", pattern: "*", action: "allow" }],
+          })
+
+          yield* llm.push(
+            reply().tool("evidence_complete", {
+              reason: "The first turn has sufficient evidence.",
+            }),
+            reply().text("First final answer.").stop(),
+          )
+
+          yield* user(chat.id, "Audit the first request.")
+          const first = yield* prompt.loop({ sessionID: chat.id })
+          if (first.info.role !== "assistant") throw new Error("expected assistant result")
+          expect(first.info.finish).toBe("stop")
+          expect(yield* llm.calls).toBe(2)
+
+          yield* llm.push(reply().text("Second final answer.").stop())
+          yield* user(chat.id, "Now handle a separate second request.")
+
+          const second = yield* prompt.loop({ sessionID: chat.id })
+
+          if (second.info.role !== "assistant") throw new Error("expected assistant result")
+          expect(second.info.finish).toBe("stop")
+          expect(yield* llm.calls).toBe(3)
+
+          const tools = JSON.stringify((yield* llm.inputs).at(2)?.tools ?? {})
+          expect(tools).toContain('"grep"')
+          expect(tools).toContain('"read"')
+          expect(tools).toContain('"glob"')
+          expect(tools).toContain('"evidence_complete"')
+        }),
+        { git: true, config: providerCfg },
+      ),
+    30_000,
+  )
+
+  it.live(
+    "keeps normal Code tool continuation when evidence completion is not signaled",
+    () =>
+      provideTmpdirServer(
+        Effect.fnUntraced(function* ({ llm }) {
+          const prompt = yield* SessionPrompt.Service
+          const sessions = yield* Session.Service
+          const chat = yield* sessions.create({
+            permission: [{ permission: "*", pattern: "*", action: "allow" }],
+          })
+
+          yield* llm.push(
+            reply().tool("glob", { pattern: "*.txt" }),
+            reply().text("Answer after ordinary tool continuation.").stop(),
+          )
+
+          yield* user(chat.id, "Inspect relevant text files, then answer.")
+
+          const result = yield* prompt.loop({ sessionID: chat.id })
+
+          if (result.info.role !== "assistant") throw new Error("expected assistant result")
+          expect(result.info.finish).toBe("stop")
+          expect(yield* llm.calls).toBe(2)
+          expect(
+            result.parts.some(
+              (part) =>
+                part.type === "text" &&
+                part.text === "Answer after ordinary tool continuation.",
+            ),
+          ).toBe(true)
+
+          const inputs = yield* llm.inputs
+          const secondTools = JSON.stringify(inputs.at(1)?.tools ?? {})
+
+          expect(secondTools).toContain('"grep"')
+          expect(secondTools).toContain('"read"')
+          expect(secondTools).toContain('"glob"')
+          expect(secondTools).toContain('"evidence_complete"')
+
+          const parts = (yield* sessions.messages({ sessionID: chat.id })).flatMap(
+            (message) => message.parts,
+          )
+          expect(
+            parts.some(
+              (part) =>
+                part.type === "tool" &&
+                part.tool === "glob" &&
+                part.state.status === "completed",
+            ),
+          ).toBe(true)
+        }),
+        { git: true, config: providerCfg },
+      ),
+    30_000,
+  )
+
   for (const finish of ["stop", "tool_calls", "length"] as const) {
     it.live(
       `does not replay completed work after a ${finish} response exceeds the budget`,

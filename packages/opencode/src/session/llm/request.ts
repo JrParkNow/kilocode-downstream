@@ -69,12 +69,24 @@ const mergeOptions = (target: Record<string, any>, source: Record<string, any> |
 export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: PrepareInput) {
   const isOpenaiOauth = input.provider.id === "openai" && input.auth?.type === "oauth"
   const includePersona = KilocodeSystemPrompt.shouldIncludePersona(input.agent.name) // kilocode_change
+  // kilocode_change start - PERF-4C.3A Code evidence sufficiency
+  const evidenceSufficiency =
+    input.agent.name === "code"
+      ? [
+          "Acquire the minimum sufficient evidence for the current reasoning step.",
+          "Expand retrieval only to resolve a concrete unresolved question, a material contradiction, or a required boundary/regression guarantee.",
+          "Once the requested claims are sufficiently supported and no such unresolved issue remains, call evidence_complete and synthesize the answer from the evidence already gathered.",
+          "Do not gather additional evidence merely for more confidence.",
+        ].join(" ")
+      : undefined
+  // kilocode_change end
   const system = [
     [
       // kilocode_change start - soul defines core identity and personality
       ...(isOpenaiOauth || !includePersona ? [] : [SystemPrompt.soul()]),
       // kilocode_change end
       ...(input.agent.prompt ? [input.agent.prompt] : SystemPrompt.provider(input.model)),
+      evidenceSufficiency,
       ...input.system,
       ...(input.user.system ? [input.user.system] : []),
     ]
