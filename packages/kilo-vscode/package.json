@@ -1297,6 +1297,7 @@
     "snapshot:build": "bun script/dev-snapshot.ts build",
     "snapshot:install": "bun script/dev-snapshot.ts install",
     "private-release:build": "bun script/private-release.ts",
+    "private-release:promote": "bun script/private-release-promote.ts",
     "extension": "bun script/launch.ts",
     "extension:isolated": "bun script/launch.ts --isolated",
     "extension:isolated:clean": "bun script/launch.ts --isolated --clean"
